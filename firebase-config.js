@@ -13,10 +13,11 @@
  * 5. 项目设置 → 你的应用 → 添加 Web 应用 → 复制 firebaseConfig 填到下方
  */
 const FIREBASE_CONFIG = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT_ID.firebasestorage.app",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID",
+  apiKey: "AIzaSyAv51MvQfh9PpzeVaYSZTc_yN_zhgGVlHs",
+  authDomain: "stickyboard-e0086.firebaseapp.com",
+  projectId: "stickyboard-e0086",
+  storageBucket: "stickyboard-e0086.firebasestorage.app",
+  messagingSenderId: "1003564403931",
+  appId: "1:1003564403931:web:98be48c3fe90a8e1ec10fe",
+  measurementId: "G-V31H6RXE7W"
 };
