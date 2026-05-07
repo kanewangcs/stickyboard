@@ -395,6 +395,57 @@ body {
 }
 .btn-add:hover { background: #4a3fc0; }
 
+/* ── Cover screens (Login / Loading) ── */
+.cover-screen {
+  position: fixed; inset: 0; z-index: 900;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #EEF2FF 0%, #F5F4F0 100%);
+}
+.cover-screen.hidden { display: none; }
+
+.loading-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid #EEF2FF; border-top-color: #5B4FCF;
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.login-card {
+  background: #fff; border-radius: 20px; padding: 48px 40px;
+  text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  max-width: 360px; width: 90%;
+}
+.login-logo {
+  width: 56px; height: 56px; background: #5B4FCF; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center; font-size: 28px;
+}
+.login-card h2 { font-size: 24px; font-weight: 700; color: #1E1B4B; }
+.login-card p { font-size: 14px; color: #6B7280; margin: 0; }
+
+.google-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; padding: 12px 24px; margin-top: 8px;
+  border: 1px solid #E5E7EB; border-radius: 10px; background: #fff;
+  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; color: #374151;
+  cursor: pointer; transition: background 0.12s, box-shadow 0.12s;
+}
+.google-btn:hover { background: #F9FAFB; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+/* ── User info in header ── */
+.user-info { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.user-info.hidden { display: none; }
+.user-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+.user-name { font-size: 13px; color: #374151; font-weight: 500; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sign-out-btn {
+  padding: 4px 10px; border: 1px solid #E5E7EB; border-radius: 6px;
+  background: #fff; font-size: 11px; color: #9CA3AF; cursor: pointer;
+  font-family: 'Inter', sans-serif; transition: background 0.12s;
+}
+.sign-out-btn:hover { background: #F3F4F6; color: #374151; }
+
+#app.hidden { display: none; }
+
 /* ── Group Picker Dropdown ── */
 .group-picker {
   position: fixed; z-index: 500;

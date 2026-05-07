@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,57 +8,85 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="app">
+
+  <!-- Loading -->
+  <div id="loadingScreen" class="cover-screen hidden">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Login -->
+  <div id="loginScreen" class="cover-screen hidden">
+    <div class="login-card">
+      <div class="login-logo">📌</div>
+      <h2>StickyBoard</h2>
+      <p id="loginSubtitle">跨设备同步你的便签</p>
+      <button id="googleSignInBtn" class="google-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        <span id="googleSignInText">使用 Google 登录</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app" class="hidden">
 
     <header class="header">
       <div class="header-left">
         <div class="logo-box">📌</div>
         <span class="app-title">StickyBoard</span>
       </div>
-      <button class="lang-btn" id="langBtn">中文</button>
+      <!-- User info (only when Firebase is active) -->
+      <div class="user-info hidden" id="userInfo">
+        <img class="user-avatar" id="userAvatar" src="" alt="" />
+        <span class="user-name" id="userName"></span>
+        <button class="sign-out-btn" id="signOutBtn" data-i18n="signOut">退出</button>
+      </div>
+      <button class="lang-btn" id="langBtn">English</button>
       <button class="new-btn" id="newNoteBtn">
         <span class="new-btn-plus">+</span>
-        <span data-i18n="newNote">New Note</span>
+        <span data-i18n="newNote">新建便签</span>
       </button>
     </header>
 
     <div class="body">
 
-      <!-- Left Sidebar -->
       <aside class="sidebar">
-        <div class="sidebar-section-title" data-i18n="groups">GROUPS</div>
+        <div class="sidebar-section-title" data-i18n="groups">分组</div>
         <div class="sidebar-item active" id="sidebarAll" data-group="all">
           <svg class="sidebar-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M15.5 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3Z"/><path d="M15 3v6h6"/>
           </svg>
-          <span data-i18n="allNotes">All Notes</span>
+          <span data-i18n="allNotes">全部便签</span>
           <span class="badge" id="allBadge">5</span>
         </div>
         <div id="groupList"></div>
         <div class="sidebar-divider"></div>
         <div class="sidebar-item add-group-item" id="addGroupBtn">
-          <span data-i18n="addGroup">+ Add Group</span>
+          <span data-i18n="addGroup">+ 添加分组</span>
         </div>
       </aside>
 
-      <!-- Main Canvas -->
       <main class="main">
         <div class="filter-bar">
-          <button class="tab active" data-tab="all" data-i18n="all">All</button>
+          <button class="tab active" data-tab="all" data-i18n="all">全部</button>
           <button class="tab" data-tab="urgent">
-            <span class="urgent-dot"></span><span data-i18n="urgent">Urgent</span>
+            <span class="urgent-dot"></span><span data-i18n="urgent">紧急</span>
           </button>
-          <button class="tab" data-tab="normal" data-i18n="normal">Normal</button>
+          <button class="tab" data-tab="normal" data-i18n="normal">普通</button>
         </div>
         <div class="canvas" id="canvas"></div>
       </main>
 
-      <!-- Right Panel -->
       <aside class="right-panel">
         <div class="right-section">
           <div class="right-section-header">
             <span class="rh-icon rh-check">✓</span>
-            <span class="rh-title" data-i18n="completed">Completed</span>
+            <span class="rh-title" data-i18n="completed">已完成</span>
             <span class="rh-count" id="completedCount">0</span>
           </div>
           <div id="completedList" class="mini-list"></div>
@@ -67,9 +95,9 @@
         <div class="right-section">
           <div class="right-section-header">
             <svg class="rh-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-            <span class="rh-title" data-i18n="trash">Trash</span>
+            <span class="rh-title" data-i18n="trash">回收站</span>
             <span class="rh-count" id="trashCount">0</span>
-            <button class="empty-trash-btn" id="emptyTrashBtn" data-i18n="empty">Empty</button>
+            <button class="empty-trash-btn" id="emptyTrashBtn" data-i18n="empty">清空</button>
           </div>
           <div id="trashList" class="mini-list"></div>
         </div>
@@ -78,28 +106,26 @@
     </div>
   </div>
 
-  <!-- Group Picker Dropdown (injected by JS) -->
-
   <!-- Note Modal -->
   <div class="modal-overlay hidden" id="noteModalOverlay">
     <div class="modal">
       <div class="modal-header">
-        <h3 data-i18n="newNote">New Note</h3>
+        <h3 data-i18n="newNote">新建便签</h3>
         <button class="modal-close" id="noteModalCloseBtn">×</button>
       </div>
       <div class="modal-body">
-        <label class="form-label" data-i18n="group">Group</label>
+        <label class="form-label" data-i18n="group">分组</label>
         <select id="groupSelect" class="form-select"></select>
         <label class="form-label urgent-label">
           <input type="checkbox" id="urgentCheck" />
-          <span data-i18n="markAsUrgent">Mark as Urgent</span>
+          <span data-i18n="markAsUrgent">标记为紧急</span>
         </label>
-        <label class="form-label" data-i18n="content">Content</label>
+        <label class="form-label" data-i18n="content">内容</label>
         <textarea id="noteContent" class="form-textarea"></textarea>
       </div>
       <div class="modal-footer">
-        <button class="btn-cancel" id="noteCancelBtn" data-i18n="cancel">Cancel</button>
-        <button class="btn-add" id="noteAddBtn" data-i18n="addNote">Add Note</button>
+        <button class="btn-cancel" id="noteCancelBtn" data-i18n="cancel">取消</button>
+        <button class="btn-add" id="noteAddBtn" data-i18n="addNote">添加便签</button>
       </div>
     </div>
   </div>
@@ -108,22 +134,27 @@
   <div class="modal-overlay hidden" id="groupModalOverlay">
     <div class="modal">
       <div class="modal-header">
-        <h3 id="groupModalTitle">New Group</h3>
+        <h3 id="groupModalTitle">新建分组</h3>
         <button class="modal-close" id="groupModalCloseBtn">×</button>
       </div>
       <div class="modal-body">
-        <label class="form-label" data-i18n="name">Name</label>
+        <label class="form-label" data-i18n="name">名称</label>
         <input type="text" id="groupNameInput" class="form-input" maxlength="20" />
-        <label class="form-label" style="margin-top:6px" data-i18n="color">Color</label>
+        <label class="form-label" style="margin-top:6px" data-i18n="color">颜色</label>
         <div class="color-picker" id="colorPicker"></div>
       </div>
       <div class="modal-footer">
-        <button class="btn-cancel" id="groupCancelBtn" data-i18n="cancel">Cancel</button>
-        <button class="btn-add" id="groupSaveBtn" data-i18n="save">Save</button>
+        <button class="btn-cancel" id="groupCancelBtn" data-i18n="cancel">取消</button>
+        <button class="btn-add" id="groupSaveBtn" data-i18n="save">保存</button>
       </div>
     </div>
   </div>
 
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
