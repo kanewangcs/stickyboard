@@ -1,5 +1,61 @@
 'use strict';
 
+// ── i18n ──────────────────────────────────────────────────
+
+const STRINGS = {
+  en: {
+    newNote: 'New Note', groups: 'GROUPS', allNotes: 'All Notes', addGroup: '+ Add Group',
+    all: 'All', urgent: 'Urgent', normal: 'Normal',
+    completed: 'Completed', trash: 'Trash', empty: 'Empty',
+    restore: 'Restore', nothingCompleted: 'Nothing completed yet', trashEmpty: 'Trash is empty',
+    group: 'Group', markAsUrgent: 'Mark as Urgent', content: 'Content',
+    writePlaceholder: 'Write your note here...', cancel: 'Cancel', addNote: 'Add Note',
+    newGroup: 'New Group', editGroup: 'Edit Group', name: 'Name', groupPlaceholder: 'e.g. Health',
+    color: 'Color', save: 'Save',
+    urgentBadge: 'Urgent', markComplete: 'Mark as complete',
+    moveToTrash: 'Move to trash', markUrgent: 'Mark as urgent', removeUrgency: 'Remove urgency',
+    emptyStateMsg: 'No notes here. Click <strong>+ New Note</strong> to add one.',
+    confirmEmptyTrash: n => `Permanently delete ${n} trashed note(s)?`,
+    confirmDeleteGroup: n => `This group has ${n} active note(s). They will be moved to trash. Continue?`,
+    confirmPermDelete: 'Permanently delete this note?',
+    langToggle: '中文',
+    changeGroup: 'Change group',
+  },
+  zh: {
+    newNote: '新建便签', groups: '分组', allNotes: '全部便签', addGroup: '+ 添加分组',
+    all: '全部', urgent: '紧急', normal: '普通',
+    completed: '已完成', trash: '回收站', empty: '清空',
+    restore: '恢复', nothingCompleted: '暂无已完成便签', trashEmpty: '回收站为空',
+    group: '分组', markAsUrgent: '标记为紧急', content: '内容',
+    writePlaceholder: '在这里写下你的便签…', cancel: '取消', addNote: '添加便签',
+    newGroup: '新建分组', editGroup: '编辑分组', name: '名称', groupPlaceholder: '例如：健康',
+    color: '颜色', save: '保存',
+    urgentBadge: '紧急', markComplete: '标记为完成',
+    moveToTrash: '移到回收站', markUrgent: '标记为紧急', removeUrgency: '取消紧急',
+    emptyStateMsg: '暂无便签，点击 <strong>新建便签</strong> 添加',
+    confirmEmptyTrash: n => `永久删除 ${n} 条便签？`,
+    confirmDeleteGroup: n => `该分组有 ${n} 条便签，将被移到回收站，确认继续？`,
+    confirmPermDelete: '永久删除这条便签？',
+    langToggle: 'English',
+    changeGroup: '更改分组',
+  },
+};
+
+let lang = 'en';
+const T = () => STRINGS[lang];
+
+function applyLanguage() {
+  const s = T();
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const v = s[el.dataset.i18n];
+    if (typeof v === 'string') el.textContent = v;
+  });
+  document.getElementById('noteContent').placeholder = s.writePlaceholder;
+  document.getElementById('groupNameInput').placeholder = s.groupPlaceholder;
+  document.getElementById('langBtn').textContent = s.langToggle;
+  renderAll();
+}
+
 // ── Constants ──────────────────────────────────────────────
 
 const CANVAS_PADDING = 24;
@@ -20,7 +76,7 @@ const THEMES = {
 
 // ── SVG Icons ──────────────────────────────────────────────
 
-const I = {
+const IC = {
   check:   `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
   zap:     `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
   grip:    `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="6" r="1" fill="currentColor"/><circle cx="15" cy="6" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="18" r="1" fill="currentColor"/><circle cx="15" cy="18" r="1" fill="currentColor"/></svg>`,
@@ -38,7 +94,6 @@ let groups = [
   { id: 'shopping', name: 'Shopping', theme: 'purple' },
 ];
 
-// status: 'active' | 'completed' | 'trashed'
 let notes = [
   { id: 1, group: 'work',     urgent: true,  content: 'Finalize the Q2 performance report and send to manager before EOD', date: 'May 7, 2026', x: null, y: null, status: 'active' },
   { id: 2, group: 'personal', urgent: false, content: 'Buy groceries: milk, eggs, bread, coffee and fresh vegetables',      date: 'May 7, 2026', x: null, y: null, status: 'active' },
@@ -56,26 +111,65 @@ let groupModalMode = 'add';
 let groupModalEditId = null;
 let selectedTheme = 'amber';
 
-// ── DOM refs ───────────────────────────────────────────────
+// ── DOM ────────────────────────────────────────────────────
 
 const canvas = document.getElementById('canvas');
 
 // ── Helpers ────────────────────────────────────────────────
 
-function getTheme(note) {
-  const g = groups.find(x => x.id === note.group);
-  return THEMES[g ? g.theme : 'amber'];
+const getTheme = note => { const g = groups.find(x => x.id === note.group); return THEMES[g ? g.theme : 'amber']; };
+const getGroup = id => groups.find(g => g.id === id);
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const fmtDate = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+// ── Group Picker ───────────────────────────────────────────
+
+let pickerNoteId = null;
+const picker = document.createElement('div');
+picker.className = 'group-picker hidden';
+document.body.appendChild(picker);
+
+function showPicker(noteId, tagEl) {
+  pickerNoteId = noteId;
+  const n = notes.find(x => x.id === noteId);
+  picker.innerHTML = groups.map(g => {
+    const t = THEMES[g.theme];
+    const active = n && n.group === g.id ? 'active-group' : '';
+    return `<div class="gpi ${active}" data-gid="${g.id}">
+      <span class="gpi-dot" style="background:${t.dot}"></span>
+      <span>${esc(g.name)}</span>
+    </div>`;
+  }).join('');
+  picker.classList.remove('hidden');
+
+  const rect = tagEl.getBoundingClientRect();
+  // Adjust if near bottom of viewport
+  const top = rect.bottom + 4;
+  picker.style.top = top + 'px';
+  picker.style.left = rect.left + 'px';
 }
 
-function getGroup(id) { return groups.find(g => g.id === id); }
-
-function esc(s) {
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function hidePicker() {
+  picker.classList.add('hidden');
+  pickerNoteId = null;
 }
 
-function fmtDate(d) {
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
+picker.addEventListener('click', e => {
+  const item = e.target.closest('.gpi');
+  if (!item) return;
+  const n = notes.find(x => x.id === pickerNoteId);
+  if (n) { n.group = item.dataset.gid; }
+  hidePicker();
+  renderCanvas();
+});
+
+document.addEventListener('click', e => {
+  if (!picker.classList.contains('hidden') &&
+      !e.target.closest('.note-group-tag') &&
+      !e.target.closest('.group-picker')) {
+    hidePicker();
+  }
+});
 
 // ── Positions ──────────────────────────────────────────────
 
@@ -115,12 +209,11 @@ function initDrag(card, note) {
     card.style.zIndex = 200;
   };
   card.addEventListener('mousedown', e => {
-    if (e.target.closest('.note-content, .note-action-btn, button')) return;
-    e.preventDefault();
-    start(e.clientX, e.clientY);
+    if (e.target.closest('.note-content, .note-action-btn, .note-group-tag, button')) return;
+    e.preventDefault(); start(e.clientX, e.clientY);
   });
   card.addEventListener('touchstart', e => {
-    if (e.target.closest('.note-content, .note-action-btn, button')) return;
+    if (e.target.closest('.note-content, .note-action-btn, .note-group-tag, button')) return;
     start(e.touches[0].clientX, e.touches[0].clientY);
   }, { passive: true });
 }
@@ -131,8 +224,7 @@ function onMove(cx, cy) {
   const r = canvas.getBoundingClientRect();
   const x = Math.max(0, cx - r.left + canvas.scrollLeft - offsetX - CANVAS_PADDING);
   const y = Math.max(0, cy - r.top  + canvas.scrollTop  - offsetY - CANVAS_PADDING);
-  card.style.left = x + 'px';
-  card.style.top  = y + 'px';
+  card.style.left = x + 'px'; card.style.top = y + 'px';
   const n = notes.find(x => x.id === noteId);
   if (n) { n.x = x; n.y = y; }
   updateCanvasHeight();
@@ -156,6 +248,7 @@ function createNoteCard(note) {
   const theme = getTheme(note);
   const group = getGroup(note.group);
   const groupName = group ? group.name : note.group;
+  const s = T();
 
   const card = document.createElement('div');
   card.className = 'note-card';
@@ -165,23 +258,30 @@ function createNoteCard(note) {
   card.innerHTML = `
     <div class="note-accent" style="background:${theme.accent}"></div>
     <div class="note-header">
-      <div class="note-group-tag" style="background:${theme.tagBg};color:${theme.tagText}">${esc(groupName)}</div>
-      ${note.urgent ? `<div class="note-urgent-badge"><span class="udot"></span>Urgent</div>` : ''}
+      <div class="note-group-tag" data-id="${note.id}" style="background:${theme.tagBg};color:${theme.tagText}" title="${s.changeGroup}">${esc(groupName)}</div>
+      ${note.urgent ? `<div class="note-urgent-badge"><span class="udot"></span>${s.urgentBadge}</div>` : ''}
       <div class="note-spacer"></div>
-      <button class="note-action-btn complete-btn" data-id="${note.id}" title="Mark as complete">${I.check}</button>
-      <button class="note-action-btn trash-btn"    data-id="${note.id}" title="Move to trash">${I.trash}</button>
+      <button class="note-action-btn complete-btn" data-id="${note.id}" title="${s.markComplete}">${IC.check}</button>
+      <button class="note-action-btn trash-btn"    data-id="${note.id}" title="${s.moveToTrash}">${IC.trash}</button>
     </div>
-    <div class="note-content" contenteditable="true" data-id="${note.id}" data-placeholder="Click to edit...">${esc(note.content)}</div>
+    <div class="note-content" contenteditable="true" data-id="${note.id}" data-placeholder="${s.clickToEdit || 'Click to edit...'}">${esc(note.content)}</div>
     <div class="note-footer">
       <span class="note-date">${note.date}</span>
       <div class="note-footer-spacer"></div>
-      <button class="note-action-btn urgency-btn ${note.urgent ? 'is-urgent' : ''}" data-id="${note.id}" title="${note.urgent ? 'Remove urgency' : 'Mark as urgent'}">${I.zap}</button>
-      <span class="note-footer-icon">${I.grip}</span>
+      <button class="note-action-btn urgency-btn ${note.urgent ? 'is-urgent' : ''}" data-id="${note.id}" title="${note.urgent ? s.removeUrgency : s.markUrgent}">${IC.zap}</button>
+      <span class="note-footer-icon">${IC.grip}</span>
     </div>`;
 
   card.querySelector('.note-content').addEventListener('blur', e => {
     const n = notes.find(x => x.id === +e.target.dataset.id);
     if (n) n.content = e.target.innerText.trim();
+  });
+
+  // Group tag click → show picker
+  card.querySelector('.note-group-tag').addEventListener('click', e => {
+    e.stopPropagation();
+    if (!picker.classList.contains('hidden') && pickerNoteId === note.id) { hidePicker(); return; }
+    showPicker(note.id, e.currentTarget);
   });
 
   initDrag(card, note);
@@ -193,6 +293,7 @@ function createNoteCard(note) {
 function renderCanvas() {
   canvas.innerHTML = '';
   canvas.style.minHeight = '';
+  hidePicker();
 
   const visible = notes.filter(n => {
     if (n.status !== 'active') return false;
@@ -209,7 +310,7 @@ function renderCanvas() {
           <path d="M15.5 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3Z"/>
           <path d="M15 3v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/>
         </svg>
-        <span>No notes here. Click <strong>+ New Note</strong> to add one.</span>
+        <span>${T().emptyStateMsg}</span>
       </div>`;
     return;
   }
@@ -233,8 +334,8 @@ function renderSidebar() {
       <span class="dot" style="background:${theme.dot}"></span>
       <span>${esc(g.name)}</span>
       <div class="group-actions">
-        <button class="group-action-btn edit-group-btn" data-id="${g.id}" title="Edit">${I.pencil}</button>
-        <button class="group-action-btn del delete-group-btn" data-id="${g.id}" title="Delete">×</button>
+        <button class="group-action-btn edit-group-btn" data-id="${g.id}">${IC.pencil}</button>
+        <button class="group-action-btn del delete-group-btn" data-id="${g.id}">×</button>
       </div>`;
 
     div.addEventListener('click', e => {
@@ -248,11 +349,9 @@ function renderSidebar() {
     groupList.appendChild(div);
   });
 
-  const allItem = document.getElementById('sidebarAll');
-  allItem.classList.toggle('active', activeGroup === 'all');
+  document.getElementById('sidebarAll').classList.toggle('active', activeGroup === 'all');
   document.getElementById('allBadge').textContent = notes.filter(n => n.status === 'active').length;
 
-  // Rebuild group select in note modal
   const sel = document.getElementById('groupSelect');
   if (sel) {
     const cur = sel.value;
@@ -264,6 +363,7 @@ function renderSidebar() {
 function createMiniCard(note, type) {
   const theme = getTheme(note);
   const groupName = (getGroup(note.group) || {}).name || note.group;
+  const s = T();
   const div = document.createElement('div');
   div.className = 'mini-card';
   div.innerHTML = `
@@ -273,13 +373,14 @@ function createMiniCard(note, type) {
     </div>
     <div class="mini-content">${esc(note.content)}</div>
     <div class="mini-actions">
-      <button class="mini-restore-btn" data-id="${note.id}" data-action="restore">${I.restore} Restore</button>
-      ${type === 'trashed' ? `<button class="mini-delete-btn" data-id="${note.id}" data-action="perm-delete" title="Delete permanently">×</button>` : ''}
+      <button class="mini-restore-btn" data-id="${note.id}" data-action="restore">${IC.restore} ${s.restore}</button>
+      ${type === 'trashed' ? `<button class="mini-delete-btn" data-id="${note.id}" data-action="perm-delete">×</button>` : ''}
     </div>`;
   return div;
 }
 
 function renderRightPanel() {
+  const s = T();
   const completed = notes.filter(n => n.status === 'completed');
   const trashed   = notes.filter(n => n.status === 'trashed');
 
@@ -288,20 +389,16 @@ function renderRightPanel() {
 
   const cList = document.getElementById('completedList');
   cList.innerHTML = '';
-  if (completed.length === 0) { cList.innerHTML = '<div class="mini-empty">Nothing completed yet</div>'; }
+  if (!completed.length) { cList.innerHTML = `<div class="mini-empty">${s.nothingCompleted}</div>`; }
   else { completed.forEach(n => cList.appendChild(createMiniCard(n, 'completed'))); }
 
   const tList = document.getElementById('trashList');
   tList.innerHTML = '';
-  if (trashed.length === 0) { tList.innerHTML = '<div class="mini-empty">Trash is empty</div>'; }
+  if (!trashed.length) { tList.innerHTML = `<div class="mini-empty">${s.trashEmpty}</div>`; }
   else { trashed.forEach(n => tList.appendChild(createMiniCard(n, 'trashed'))); }
 }
 
-function renderAll() {
-  renderSidebar();
-  renderCanvas();
-  renderRightPanel();
-}
+function renderAll() { renderSidebar(); renderCanvas(); renderRightPanel(); }
 
 // ── Note Operations ────────────────────────────────────────
 
@@ -309,8 +406,7 @@ function noteSetStatus(id, status) {
   const n = notes.find(x => x.id === id);
   if (!n) return;
   if (status === 'active' && (n.x === null || n.y === null)) {
-    const pos = findNewNotePosition();
-    n.x = pos.x; n.y = pos.y;
+    const pos = findNewNotePosition(); n.x = pos.x; n.y = pos.y;
   }
   n.status = status;
   renderAll();
@@ -321,15 +417,12 @@ function toggleUrgent(id) {
   if (n) { n.urgent = !n.urgent; renderCanvas(); }
 }
 
-function permanentDelete(id) {
-  notes = notes.filter(n => n.id !== id);
-  renderRightPanel();
-}
+function permanentDelete(id) { notes = notes.filter(n => n.id !== id); renderRightPanel(); }
 
 function emptyTrash() {
   const count = notes.filter(n => n.status === 'trashed').length;
   if (!count) return;
-  if (!confirm(`Permanently delete ${count} trashed note(s)?`)) return;
+  if (!confirm(T().confirmEmptyTrash(count))) return;
   notes = notes.filter(n => n.status !== 'trashed');
   renderRightPanel();
 }
@@ -338,15 +431,15 @@ function emptyTrash() {
 
 function renderColorPicker() {
   document.getElementById('colorPicker').innerHTML = Object.entries(THEMES).map(([key, t]) =>
-    `<div class="color-dot-pick ${selectedTheme === key ? 'selected' : ''}" data-theme="${key}" style="background:${t.dot}" title="${key}"></div>`
+    `<div class="color-dot-pick ${selectedTheme === key ? 'selected' : ''}" data-theme="${key}" style="background:${t.dot}"></div>`
   ).join('');
 }
 
 function openGroupModal(mode, groupId = null) {
-  groupModalMode = mode;
-  groupModalEditId = groupId;
+  groupModalMode = mode; groupModalEditId = groupId;
   const g = groupId ? getGroup(groupId) : null;
-  document.getElementById('groupModalTitle').textContent = mode === 'add' ? 'New Group' : 'Edit Group';
+  const s = T();
+  document.getElementById('groupModalTitle').textContent = mode === 'add' ? s.newGroup : s.editGroup;
   document.getElementById('groupNameInput').value = g ? g.name : '';
   selectedTheme = g ? g.theme : 'amber';
   renderColorPicker();
@@ -360,8 +453,7 @@ function saveGroup() {
   const name = document.getElementById('groupNameInput').value.trim();
   if (!name) {
     const el = document.getElementById('groupNameInput');
-    el.style.borderColor = '#EF4444';
-    el.focus();
+    el.style.borderColor = '#EF4444'; el.focus();
     setTimeout(() => { el.style.borderColor = ''; }, 1500);
     return;
   }
@@ -371,16 +463,13 @@ function saveGroup() {
     const g = getGroup(groupModalEditId);
     if (g) { g.name = name; g.theme = selectedTheme; }
   }
-  closeGroupModal();
-  renderAll();
+  closeGroupModal(); renderAll();
 }
 
 function deleteGroup(id) {
   const activeIn = notes.filter(n => n.group === id && n.status === 'active');
-  if (activeIn.length) {
-    if (!confirm(`This group has ${activeIn.length} active note(s). They will be moved to trash. Continue?`)) return;
-    activeIn.forEach(n => n.status = 'trashed');
-  }
+  if (activeIn.length && !confirm(T().confirmDeleteGroup(activeIn.length))) return;
+  activeIn.forEach(n => n.status = 'trashed');
   groups = groups.filter(g => g.id !== id);
   if (activeGroup === id) activeGroup = 'all';
   renderAll();
@@ -403,36 +492,28 @@ function addNote() {
   const el = document.getElementById('noteContent');
   const content = el.value.trim();
   if (!content) {
-    el.style.borderColor = '#EF4444';
-    el.focus();
+    el.style.borderColor = '#EF4444'; el.focus();
     setTimeout(() => { el.style.borderColor = ''; }, 1500);
     return;
   }
   const pos = findNewNotePosition();
   notes.unshift({
-    id: nextId++,
-    group: document.getElementById('groupSelect').value,
+    id: nextId++, group: document.getElementById('groupSelect').value,
     urgent: document.getElementById('urgentCheck').checked,
-    content, date: fmtDate(new Date()),
-    x: pos.x, y: pos.y, status: 'active',
+    content, date: fmtDate(new Date()), x: pos.x, y: pos.y, status: 'active',
   });
-  closeNoteModal();
-  renderAll();
+  closeNoteModal(); renderAll();
 }
 
 // ── Event Listeners ────────────────────────────────────────
 
-// Header
 document.getElementById('newNoteBtn').addEventListener('click', openNoteModal);
-
-// Note modal
 document.getElementById('noteModalCloseBtn').addEventListener('click', closeNoteModal);
 document.getElementById('noteCancelBtn').addEventListener('click', closeNoteModal);
 document.getElementById('noteAddBtn').addEventListener('click', addNote);
 document.getElementById('noteModalOverlay').addEventListener('click', e => { if (e.target.id === 'noteModalOverlay') closeNoteModal(); });
 document.getElementById('noteContent').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) addNote(); });
 
-// Group modal
 document.getElementById('addGroupBtn').addEventListener('click', () => openGroupModal('add'));
 document.getElementById('groupModalCloseBtn').addEventListener('click', closeGroupModal);
 document.getElementById('groupCancelBtn').addEventListener('click', closeGroupModal);
@@ -440,7 +521,6 @@ document.getElementById('groupSaveBtn').addEventListener('click', saveGroup);
 document.getElementById('groupModalOverlay').addEventListener('click', e => { if (e.target.id === 'groupModalOverlay') closeGroupModal(); });
 document.getElementById('groupNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') saveGroup(); });
 
-// Color picker
 document.getElementById('colorPicker').addEventListener('click', e => {
   const dot = e.target.closest('.color-dot-pick');
   if (!dot) return;
@@ -448,7 +528,6 @@ document.getElementById('colorPicker').addEventListener('click', e => {
   document.querySelectorAll('.color-dot-pick').forEach(d => d.classList.toggle('selected', d.dataset.theme === selectedTheme));
 });
 
-// Group list (edit/delete delegated)
 document.getElementById('groupList').addEventListener('click', e => {
   const eBtn = e.target.closest('.edit-group-btn');
   const dBtn = e.target.closest('.delete-group-btn');
@@ -456,25 +535,20 @@ document.getElementById('groupList').addEventListener('click', e => {
   if (dBtn) deleteGroup(dBtn.dataset.id);
 });
 
-// All Notes sidebar item
 document.getElementById('sidebarAll').addEventListener('click', () => {
   document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
   document.getElementById('sidebarAll').classList.add('active');
-  activeGroup = 'all';
-  renderCanvas();
+  activeGroup = 'all'; renderCanvas();
 });
 
-// Tabs
 document.querySelectorAll('.tab[data-tab]').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
-    activeTab = tab.dataset.tab;
-    renderCanvas();
+    activeTab = tab.dataset.tab; renderCanvas();
   });
 });
 
-// Canvas: complete / trash / urgency toggle (delegated)
 canvas.addEventListener('click', e => {
   const c = e.target.closest('.complete-btn');
   const t = e.target.closest('.trash-btn');
@@ -484,26 +558,28 @@ canvas.addEventListener('click', e => {
   if (u) toggleUrgent(+u.dataset.id);
 });
 
-// Completed list (restore)
 document.getElementById('completedList').addEventListener('click', e => {
-  const btn = e.target.closest('[data-action="restore"]');
-  if (btn) noteSetStatus(+btn.dataset.id, 'active');
+  const r = e.target.closest('[data-action="restore"]');
+  if (r) noteSetStatus(+r.dataset.id, 'active');
 });
 
-// Trash list (restore / perm-delete)
 document.getElementById('trashList').addEventListener('click', e => {
   const r = e.target.closest('[data-action="restore"]');
   const d = e.target.closest('[data-action="perm-delete"]');
   if (r) noteSetStatus(+r.dataset.id, 'active');
-  if (d && confirm('Permanently delete this note?')) permanentDelete(+d.dataset.id);
+  if (d && confirm(T().confirmPermDelete)) permanentDelete(+d.dataset.id);
 });
 
-// Empty trash
 document.getElementById('emptyTrashBtn').addEventListener('click', emptyTrash);
 
-// Global ESC
+// Language toggle
+document.getElementById('langBtn').addEventListener('click', () => {
+  lang = lang === 'en' ? 'zh' : 'en';
+  applyLanguage();
+});
+
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeNoteModal(); closeGroupModal(); }
+  if (e.key === 'Escape') { closeNoteModal(); closeGroupModal(); hidePicker(); }
 });
 
 // ── Init ───────────────────────────────────────────────────

@@ -15,9 +15,10 @@
         <div class="logo-box">📌</div>
         <span class="app-title">StickyBoard</span>
       </div>
+      <button class="lang-btn" id="langBtn">中文</button>
       <button class="new-btn" id="newNoteBtn">
         <span class="new-btn-plus">+</span>
-        <span>New Note</span>
+        <span data-i18n="newNote">New Note</span>
       </button>
     </header>
 
@@ -25,29 +26,29 @@
 
       <!-- Left Sidebar -->
       <aside class="sidebar">
-        <div class="sidebar-section-title">GROUPS</div>
+        <div class="sidebar-section-title" data-i18n="groups">GROUPS</div>
         <div class="sidebar-item active" id="sidebarAll" data-group="all">
           <svg class="sidebar-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M15.5 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3Z"/><path d="M15 3v6h6"/>
           </svg>
-          <span>All Notes</span>
+          <span data-i18n="allNotes">All Notes</span>
           <span class="badge" id="allBadge">5</span>
         </div>
         <div id="groupList"></div>
         <div class="sidebar-divider"></div>
         <div class="sidebar-item add-group-item" id="addGroupBtn">
-          <span>+ Add Group</span>
+          <span data-i18n="addGroup">+ Add Group</span>
         </div>
       </aside>
 
       <!-- Main Canvas -->
       <main class="main">
         <div class="filter-bar">
-          <button class="tab active" data-tab="all">All</button>
+          <button class="tab active" data-tab="all" data-i18n="all">All</button>
           <button class="tab" data-tab="urgent">
-            <span class="urgent-dot"></span>Urgent
+            <span class="urgent-dot"></span><span data-i18n="urgent">Urgent</span>
           </button>
-          <button class="tab" data-tab="normal">Normal</button>
+          <button class="tab" data-tab="normal" data-i18n="normal">Normal</button>
         </div>
         <div class="canvas" id="canvas"></div>
       </main>
@@ -57,7 +58,7 @@
         <div class="right-section">
           <div class="right-section-header">
             <span class="rh-icon rh-check">✓</span>
-            <span class="rh-title">Completed</span>
+            <span class="rh-title" data-i18n="completed">Completed</span>
             <span class="rh-count" id="completedCount">0</span>
           </div>
           <div id="completedList" class="mini-list"></div>
@@ -66,9 +67,9 @@
         <div class="right-section">
           <div class="right-section-header">
             <svg class="rh-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-            <span class="rh-title">Trash</span>
+            <span class="rh-title" data-i18n="trash">Trash</span>
             <span class="rh-count" id="trashCount">0</span>
-            <button class="empty-trash-btn" id="emptyTrashBtn">Empty</button>
+            <button class="empty-trash-btn" id="emptyTrashBtn" data-i18n="empty">Empty</button>
           </div>
           <div id="trashList" class="mini-list"></div>
         </div>
@@ -77,26 +78,28 @@
     </div>
   </div>
 
+  <!-- Group Picker Dropdown (injected by JS) -->
+
   <!-- Note Modal -->
   <div class="modal-overlay hidden" id="noteModalOverlay">
     <div class="modal">
       <div class="modal-header">
-        <h3>New Note</h3>
+        <h3 data-i18n="newNote">New Note</h3>
         <button class="modal-close" id="noteModalCloseBtn">×</button>
       </div>
       <div class="modal-body">
-        <label class="form-label">Group</label>
+        <label class="form-label" data-i18n="group">Group</label>
         <select id="groupSelect" class="form-select"></select>
         <label class="form-label urgent-label">
           <input type="checkbox" id="urgentCheck" />
-          <span>Mark as Urgent</span>
+          <span data-i18n="markAsUrgent">Mark as Urgent</span>
         </label>
-        <label class="form-label">Content</label>
-        <textarea id="noteContent" class="form-textarea" placeholder="Write your note here..."></textarea>
+        <label class="form-label" data-i18n="content">Content</label>
+        <textarea id="noteContent" class="form-textarea"></textarea>
       </div>
       <div class="modal-footer">
-        <button class="btn-cancel" id="noteCancelBtn">Cancel</button>
-        <button class="btn-add" id="noteAddBtn">Add Note</button>
+        <button class="btn-cancel" id="noteCancelBtn" data-i18n="cancel">Cancel</button>
+        <button class="btn-add" id="noteAddBtn" data-i18n="addNote">Add Note</button>
       </div>
     </div>
   </div>
@@ -109,14 +112,14 @@
         <button class="modal-close" id="groupModalCloseBtn">×</button>
       </div>
       <div class="modal-body">
-        <label class="form-label">Name</label>
-        <input type="text" id="groupNameInput" class="form-input" placeholder="e.g. Health" maxlength="20" />
-        <label class="form-label" style="margin-top:6px">Color</label>
+        <label class="form-label" data-i18n="name">Name</label>
+        <input type="text" id="groupNameInput" class="form-input" maxlength="20" />
+        <label class="form-label" style="margin-top:6px" data-i18n="color">Color</label>
         <div class="color-picker" id="colorPicker"></div>
       </div>
       <div class="modal-footer">
-        <button class="btn-cancel" id="groupCancelBtn">Cancel</button>
-        <button class="btn-add" id="groupSaveBtn">Save</button>
+        <button class="btn-cancel" id="groupCancelBtn" data-i18n="cancel">Cancel</button>
+        <button class="btn-add" id="groupSaveBtn" data-i18n="save">Save</button>
       </div>
     </div>
   </div>
