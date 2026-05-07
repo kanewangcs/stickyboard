@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StickyBoard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo-box">📌</div>
+        <span class="app-title">StickyBoard</span>
+      </div>
+      <button class="new-btn" id="newNoteBtn">
+        <span class="new-btn-plus">+</span>
+        <span>New Note</span>
+      </button>
+    </header>
+
+    <!-- Body -->
+    <div class="body">
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-section-title">GROUPS</div>
+        <div class="sidebar-item active" data-group="all">
+          <svg class="sidebar-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15.5 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3Z"/><path d="M15 3v6h6"/><path d="M10 16s.8 1 2 1 2-1 2-1"/><path d="M8 13h0"/><path d="M16 13h0"/>
+          </svg>
+          <span>All Notes</span>
+          <span class="badge" id="allBadge">5</span>
+        </div>
+        <div class="sidebar-item" data-group="work">
+          <span class="dot" style="background:#EF4444"></span>
+          <span>Work</span>
+        </div>
+        <div class="sidebar-item" data-group="personal">
+          <span class="dot" style="background:#06B6D4"></span>
+          <span>Personal</span>
+        </div>
+        <div class="sidebar-item" data-group="study">
+          <span class="dot" style="background:#10B981"></span>
+          <span>Study</span>
+        </div>
+        <div class="sidebar-item" data-group="shopping">
+          <span class="dot" style="background:#F59E0B"></span>
+          <span>Shopping</span>
+        </div>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-item add-group-item" id="addGroupBtn">
+          <span style="color:#9CA3AF">+ Add Group</span>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="main">
+        <div class="filter-bar">
+          <button class="tab active" data-tab="all">All</button>
+          <button class="tab" data-tab="urgent">
+            <span class="urgent-dot"></span>
+            Urgent
+          </button>
+          <button class="tab" data-tab="normal">Normal</button>
+        </div>
+        <div class="canvas" id="canvas"></div>
+      </main>
+
+    </div>
+  </div>
+
+  <!-- New Note Modal -->
+  <div class="modal-overlay hidden" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>New Note</h3>
+        <button class="modal-close" id="modalCloseBtn">×</button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">Group</label>
+        <select id="groupSelect" class="form-select">
+          <option value="work">Work</option>
+          <option value="personal">Personal</option>
+          <option value="study">Study</option>
+          <option value="shopping">Shopping</option>
+        </select>
+        <label class="form-label urgent-label">
+          <input type="checkbox" id="urgentCheck" />
+          <span>Mark as Urgent</span>
+        </label>
+        <label class="form-label">Content</label>
+        <textarea id="noteContent" class="form-textarea" placeholder="Write your note here..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="cancelBtn">Cancel</button>
+        <button class="btn-add" id="addBtn">Add Note</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
