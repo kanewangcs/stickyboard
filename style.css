@@ -210,11 +210,9 @@ body {
 .canvas {
   flex: 1;
   padding: 24px;
-  overflow-y: auto;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  align-content: flex-start;
+  overflow: auto;
+  position: relative;
+  min-height: 300px;
 }
 
 /* ── Note Card ── */
@@ -225,13 +223,21 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: transform 0.15s, box-shadow 0.15s;
-  flex-shrink: 0;
+  position: absolute;
+  cursor: grab;
+  user-select: none;
+  transition: box-shadow 0.15s;
 }
 
 .note-card:hover {
-  transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.note-card.dragging {
+  cursor: grabbing;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  opacity: 0.93;
+  transition: none;
 }
 
 .note-accent {
@@ -299,6 +305,7 @@ body {
   outline: none;
   min-height: 40px;
   cursor: text;
+  user-select: text;
 }
 
 .note-content:empty::before {
@@ -334,15 +341,18 @@ body {
 
 /* Empty state */
 .empty-state {
-  width: 100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 80px 0;
   color: #9CA3AF;
   font-size: 14px;
   gap: 10px;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .empty-state svg { opacity: 0.3; }
